@@ -1,0 +1,1 @@
+ Ve zlomku mobilů se systémem Android se objevila chyba, která zas...   Ve zlomku mobilů se systémem Android se objevila chyba, která zasílá textové zprávy na špatná čísla. Dodavatel softwaru Google situaci řeší. 
