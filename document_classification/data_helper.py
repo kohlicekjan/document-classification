@@ -1,5 +1,6 @@
 import collections
 import glob
+import io
 import json
 import logging
 import os
@@ -20,7 +21,7 @@ class DataHelper:
         self.data_files = list()
 
     def load_labels(self, file_json):
-        with open(file_json, 'r') as f:
+        with io.open(file_json, 'r', encoding='utf-8')  as f:
             self.label_names = json.load(f)
             logging.debug("labels: {0}".format(file_json))
 
@@ -50,7 +51,7 @@ class DataHelper:
         return x_raw, y_raw, is_next
 
     def __load_data_file(self, filename):
-        with open(filename, 'r') as file_txt:
+        with io.open(filename, 'r', encoding='utf-8')  as file_txt:
             # logging.debug("open file: {0}".format(filename))
             lines = file_txt.read().splitlines()
 
@@ -76,7 +77,7 @@ class DataHelper:
 
     @staticmethod
     def __load_lines(filename):
-        with open(filename, 'r') as f:
+        with io.open(filename, 'r', encoding='utf-8') as f:
             return set(f.read().splitlines())
 
     @staticmethod
@@ -86,7 +87,7 @@ class DataHelper:
 
         data_files = sorted(glob.glob(os.path.join(data_dir, '*.txt')))
         for filename in data_files:
-            with open(filename, 'r') as file_txt:
+            with io.open(filename, 'r', encoding='utf-8') as file_txt:
                 lines = file_txt.read().splitlines()
 
             text = ' '.join(lines).lower()
@@ -120,4 +121,4 @@ class DataHelper:
                     del all_words[key_words]
 
         with open(file_name, 'w') as file_corpus:
-            file_corpus.write("\n".join(all_words.keys()))
+            file_corpus.write(u"\n".join(all_words.keys()).encode('utf-8'))

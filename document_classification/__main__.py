@@ -27,7 +27,7 @@ def parse_args():
                         help="Test data directory (default: %(default)s)")
     parser.add_argument('--classifier', dest="classifier",
                         choices=('nb', 'svm', 'perceptron', 'aggressive', 'bmb', 'mlpc'), default='mlpc',
-                        help=" Classification algorithm (default: %(default)s)")
+                        help="Classification algorithm (default: %(default)s)")
     parser.add_argument('--model-file', dest="model_file", required=True, help="File model for loading or saving")
 
     return parser.parse_args()
