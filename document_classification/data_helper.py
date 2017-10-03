@@ -2,31 +2,25 @@ import collections
 import glob
 import json
 import logging
-import numpy as np
 import os
 
 import nltk
+import numpy as np
 
-STOPWORDS_FILE = '../data/stopwords_cz.txt'
-DIC_FILE = '../data/corpus_words_cz.dic'
+DIC_FILE = '../data/corpus_words_labels.dic'
 
 
 class DataHelper:
-    def __init__(self, dic_file=DIC_FILE, stopwords_file=STOPWORDS_FILE):
-
-        self.stopwords = set(self.__load_lines(stopwords_file))
-
+    def __init__(self, dic_file=DIC_FILE):
         self.dic = self.__load_lines(dic_file)
         self.all_words = dict(zip(self.dic, np.zeros(len(self.dic), float)))
 
         self.label_names = list()
         self.next_num = 0
         self.data_files = list()
-        self.parametrize = None
-        self.data = list()
 
     def load_labels(self, file_json):
-        with open(file_json, 'r') as f:  # encoding='utf-8'
+        with open(file_json, 'r') as f:
             self.label_names = json.load(f)
             logging.debug("labels: {0}".format(file_json))
 
@@ -57,7 +51,7 @@ class DataHelper:
 
     def __load_data_file(self, filename):
         with open(filename, 'r') as file_txt:
-            logging.debug("open file: {0}".format(filename))
+            # logging.debug("open file: {0}".format(filename))
             lines = file_txt.read().splitlines()
 
         text = ' '.join(lines).lower()
@@ -70,10 +64,9 @@ class DataHelper:
         return x_raw, y_raw
 
     def text_to_vector(self, text):
-        words = nltk.tokenize.RegexpTokenizer(r'\w{3,}').tokenize(text)
-        words = self.__remove_stopwords(words)
+        words = nltk.tokenize.RegexpTokenizer(r'[^\d\W]{2,}').tokenize(text)
 
-        words_use = dict(self.parametrize(words))
+        words_use = dict(collections.Counter(words))
 
         all_words = dict(self.all_words)
 
@@ -81,24 +74,50 @@ class DataHelper:
 
         return all_words.values()
 
-    def __remove_stopwords(self, words):
-        return [word for word in words if word not in self.stopwords and not word.isdigit()]
-
-    @staticmethod
-    def parametrize_freq(words):
-        return collections.Counter(words)
-
-    @staticmethod
-    def parametrize_stop_ten(words):
-        freq = collections.Counter(words)
-        return {x: y if y <= 10 else 0 for x, y in freq.items()}
-
-    @staticmethod
-    def parametrize_exists(words):
-        freq = collections.Counter(words)
-        return {x: 1 for x, y in freq.items()}
-
     @staticmethod
     def __load_lines(filename):
         with open(filename, 'r') as f:
             return set(f.read().splitlines())
+
+    @staticmethod
+    def create_corpus(data_dir, file_name):
+        labels_words = {}
+        all_words = {}
+
+        data_files = sorted(glob.glob(os.path.join(data_dir, '*.txt')))
+        for filename in data_files:
+            with open(filename, 'r') as file_txt:
+                lines = file_txt.read().splitlines()
+
+            text = ' '.join(lines).lower()
+            words = nltk.tokenize.RegexpTokenizer(r'[^\d\W]{2,}').tokenize(text)
+            freq = collections.Counter(words)
+
+            label_file = os.path.splitext(os.path.basename(filename))[0].split('_')[1]
+
+            for key_freq in freq.keys():
+                if label_file not in labels_words:
+                    labels_words[label_file] = {}
+
+                if key_freq not in labels_words[label_file]:
+                    labels_words[label_file][key_freq] = 0
+
+                if key_freq not in all_words:
+                    all_words[key_freq] = 0
+
+                labels_words[label_file][key_freq] += freq[key_freq]
+                all_words[key_freq] += freq[key_freq]
+
+        for key_words in all_words.keys():
+            if all_words[key_words] >= 500:
+                exists = True
+                for key_labels_words in labels_words:
+                    if key_words not in labels_words[key_labels_words]:
+                        exists = False
+                        break
+
+                if exists:
+                    del all_words[key_words]
+
+        with open(file_name, 'w') as file_corpus:
+            file_corpus.write("\n".join(all_words.keys()))

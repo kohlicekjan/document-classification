@@ -43,7 +43,7 @@ class GUI:
 
         self.progress.stop()
         self.progress.pack_forget()
-        tkMessageBox.showinfo("Result", label_name, parent=self.window)
+        tkMessageBox.showinfo("Result", u"Category: {0}".format(label_name), parent=self.window)
 
         self.__disabled(False)
 
